@@ -5,16 +5,17 @@
   <title>カメラで撮影→共有</title>
 </head>
 <body>
+  <button id="startBtn">写真を撮る</button>
   <input type="file" accept="image/*" capture="environment" id="cameraInput" style="display:none" />
-  <p>写真を撮ると共有画面が表示されます。</p>
+  <p>ボタンを押すとカメラが開きます。</p>
 
   <script>
+    const startBtn = document.getElementById('startBtn');
     const input = document.getElementById('cameraInput');
 
-    // ページ読み込み後にカメラ起動
-    window.onload = () => {
+    startBtn.addEventListener('click', () => {
       input.click();
-    };
+    });
 
     input.addEventListener('change', async () => {
       const file = input.files[0];
