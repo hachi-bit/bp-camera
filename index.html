@@ -2,12 +2,49 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>カメラで撮影→共有</title>
+  <title>血圧イート Ver5</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;  /* 画面全体の高さ */
+      margin: 0;
+      background-color: #f0f0f0;
+      position: relative;
+      font-family: sans-serif;
+    }
+    #startBtn {
+      width: 80%;          /* 横幅80% */
+      max-width: 400px;    /* 最大幅400px */
+      height: 60px;        /* 高さ60px */
+      font-size: 1.5rem;   /* 文字サイズ大きめ */
+      cursor: pointer;
+      border-radius: 8px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: background-color 0.3s ease;
+    }
+    #startBtn:hover {
+      background-color: #0056b3;
+    }
+    #version {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      font-weight: bold;
+      color: #666;
+      user-select: none;
+    }
+  </style>
 </head>
 <body>
+  <div id="version">血圧イート Ver5</div>
+
   <button id="startBtn">写真を撮る</button>
   <input type="file" accept="image/*" capture="environment" id="cameraInput" style="display:none" />
-  <p>ボタンを押すとカメラが開きます。</p>
 
   <script>
     const startBtn = document.getElementById('startBtn');
