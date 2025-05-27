@@ -1,69 +1,37 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>血圧カメラOCR</title>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2"></script>
-  <style>
-    body { font-family: sans-serif; padding: 1em; }
-    button, input { font-size: 1.2em; margin-top: 1em; }
-    img { max-width: 100%; margin-top: 1em; }
-  </style>
+  <meta charset="UTF-8" />
+  <title>カメラで撮影→共有</title>
 </head>
 <body>
-  <h1>血圧読み取りカメラ３</h1>
-  <input type="file" accept="image/*" capture="environment" id="photoInput"><br>
-  <p id="status">画像を選んでください</p>
-  <p><strong>抽出結果:</strong> <span id="resultText">---</span></p>
-  <pre id="rawText" style="white-space: pre-wrap; font-size: 0.9em;"></pre>
-  <img id="preview" src="" alt="preview">
+  <input type="file" accept="image/*" capture="environment" id="cameraInput" style="display:none" />
+  <p>写真を撮ると共有画面が表示されます。</p>
 
   <script>
-    const input = document.getElementById('photoInput');
-    const resultText = document.getElementById('resultText');
-    const status = document.getElementById('status');
-    const rawText = document.getElementById('rawText');
-    const preview = document.getElementById('preview');
+    const input = document.getElementById('cameraInput');
+
+    // ページ読み込み後にカメラ起動
+    window.onload = () => {
+      input.click();
+    };
 
     input.addEventListener('change', async () => {
       const file = input.files[0];
       if (!file) return;
 
-      preview.src = URL.createObjectURL(file);
-      status.textContent = "OCR処理中...";
-      resultText.textContent = "---";
-      rawText.textContent = "";
+      if (!navigator.share) {
+        alert("共有機能がサポートされていません");
+        return;
+      }
 
-      const image = await file.arrayBuffer();
-      const { data: { text } } = await Tesseract.recognize(
-        new Uint8Array(image), 'eng+jpn', { logger: m => console.log(m) }
-      );
-
-      rawText.textContent = text;
-      const match = text.match(/\b\d{2,3}\/\d{2,3}\b/);
-      const result = match ? match[0] : null;
-      resultText.textContent = result || "見つかりませんでした";
-      status.textContent = "OCR完了";
-
-      if (!navigator.share) return;
-
-      if (result) {
-        // 数値が見つかった → テキスト共有
+      try {
         await navigator.share({
-          title: '血圧OCR',
-          text: `血圧は ${result} でした。`,
+          title: '撮影画像共有',
+          files: [file],
         });
-      } else {
-        // 数値が見つからなかった → 画像共有
-        const fileToShare = new File([file], file.name, { type: file.type });
-        try {
-          await navigator.share({
-            title: '血圧画像（OCR失敗）',
-            files: [fileToShare],
-          });
-        } catch (e) {
-          alert("画像の共有に失敗しました: " + e.message);
-        }
+      } catch (e) {
+        alert("共有に失敗しました: " + e.message);
       }
     });
   </script>
