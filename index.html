@@ -7,45 +7,71 @@
   <style>
     body { font-family: sans-serif; padding: 1em; }
     button, input { font-size: 1.2em; margin-top: 1em; }
+    img { max-width: 100%; margin-top: 1em; }
   </style>
 </head>
 <body>
-  <h1>血圧読み取りカメラ</h1>
+  <h1>血圧読み取りカメラVer2</h1>
   <input type="file" accept="image/*" capture="environment" id="photoInput"><br>
   <p id="status">画像を選んでください</p>
   <p><strong>抽出結果:</strong> <span id="resultText">---</span></p>
-  <button id="shareBtn" style="display:none;">LINEに共有</button>
+  <pre id="rawText" style="white-space: pre-wrap; font-size: 0.9em;"></pre>
+  <button id="shareBtn" style="display:none;">LINEに共有（数値）</button>
+  <button id="imageShareBtn" style="display:none;">画像を共有</button>
+  <img id="preview" src="" alt="preview">
 
   <script>
     const input = document.getElementById('photoInput');
     const resultText = document.getElementById('resultText');
     const status = document.getElementById('status');
+    const rawText = document.getElementById('rawText');
     const shareBtn = document.getElementById('shareBtn');
+    const imageShareBtn = document.getElementById('imageShareBtn');
+    const preview = document.getElementById('preview');
+    let currentFile;
 
     input.addEventListener('change', async () => {
       const file = input.files[0];
       if (!file) return;
 
+      currentFile = file;
+      preview.src = URL.createObjectURL(file);
       status.textContent = "OCR処理中...";
+
       const image = await file.arrayBuffer();
       const { data: { text } } = await Tesseract.recognize(
         new Uint8Array(image), 'eng+jpn', { logger: m => console.log(m) }
       );
 
-      // 血圧の数値らしきものを抽出（例：120/80）
+      rawText.textContent = text;
       const match = text.match(/\b\d{2,3}\/\d{2,3}\b/);
       const result = match ? match[0] : "見つかりませんでした";
       resultText.textContent = result;
-      status.textContent = "完了";
+      status.textContent = "OCR完了";
 
-      if (navigator.share && match) {
-        shareBtn.style.display = 'inline-block';
-        shareBtn.onclick = () => {
-          navigator.share({
-            title: '今日の血圧',
-            text: `血圧は ${result} でした。`,
-          });
-        };
+      if (navigator.share) {
+        if (match) {
+          shareBtn.style.display = 'inline-block';
+          shareBtn.onclick = () => {
+            navigator.share({
+              title: '血圧OCR',
+              text: `血圧は ${result} でした。`,
+            });
+          };
+        } else {
+          imageShareBtn.style.display = 'inline-block';
+          imageShareBtn.onclick = async () => {
+            const fileToShare = new File([file], file.name, { type: file.type });
+            try {
+              await navigator.share({
+                title: '血圧画像（OCR失敗）',
+                files: [fileToShare],
+              });
+            } catch (e) {
+              alert("共有できませんでした: " + e.message);
+            }
+          };
+        }
       }
     });
   </script>
